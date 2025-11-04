@@ -1,0 +1,43 @@
+:root{
+  --bg:#0f3b93;
+}
+html,body{height:100%;}
+body{
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  /* wallpaper behind the scene: pale cream with teeny pixelated pale-red dots in a hex grid */
+  background-color: #f7ecd6; /* grandma cream */
+  /* tiny SVG tiles a hex-like arrangement of small square dots; shape-rendering keeps them crisp */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='18' viewBox='0 0 24 18'><g fill='%23f29e9e' opacity='0.45' shape-rendering='crispEdges'><rect x='6' y='3' width='2' height='2'/><rect x='18' y='3' width='2' height='2'/><rect x='0' y='10' width='2' height='2'/><rect x='12' y='10' width='2' height='2'/></g></svg>");
+  background-size: 24px 18px;
+  background-repeat: repeat;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+.center{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* Keep the canvas visually crisp; we'll scale a low-res buffer onto it */
+#titleCanvas{
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: min(960px, 90vw);
+  height: auto;
+  background: transparent;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* A tiny caption for keyboard hint (positioned by JS if needed) */
+.hint{
+  color:#fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  font-size:12px;
+  margin-top:8px;
+}
