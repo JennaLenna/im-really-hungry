@@ -409,7 +409,7 @@
   const INVENTORY_ITEM_INFO = {
     driftwood: {
       title: 'DRIFTWOOD',
-      bio: "You found this washed up on the beach, but it doesn't seem as pretty as the stuff in the photos..."
+      bio: "You found this washed up on the beach, but it isn't like the photos say..."
     },
     seaweed: {
       title: 'SEAWEED',
@@ -612,19 +612,29 @@
     ]
   };
   const WISE_FRAME_COUNT = 3;
-  const WISE_RENDER_SCALE = 0.4;
+  const WISE_RENDER_SCALE = 0.68;
   const WISE_FRAME_DURATION = 0.42;
   const WISE_WALK_SPEED = 11;
   const WISE_FRAME_RECTS = {
     down: [
-      {sx: 6, sy: 1, sw: 35, sh: 95},
-      {sx: 54, sy: 0, sw: 35, sh: 96},
-      {sx: 102, sy: 1, sw: 35, sh: 95}
+      {sx: 5, sy: 3, sw: 37, sh: 45},
+      {sx: 53, sy: 3, sw: 37, sh: 45},
+      {sx: 101, sy: 3, sw: 37, sh: 45}
+    ],
+    left: [
+      {sx: 5, sy: 51, sw: 36, sh: 45},
+      {sx: 54, sy: 51, sw: 34, sh: 45},
+      {sx: 103, sy: 51, sw: 32, sh: 45}
+    ],
+    right: [
+      {sx: 8, sy: 99, sw: 34, sh: 45},
+      {sx: 55, sy: 99, sw: 34, sh: 45},
+      {sx: 102, sy: 99, sw: 34, sh: 45}
     ],
     up: [
-      {sx: 6, sy: 97, sw: 35, sh: 95},
-      {sx: 54, sy: 96, sw: 35, sh: 96},
-      {sx: 102, sy: 97, sw: 35, sh: 95}
+      {sx: 5, sy: 147, sw: 37, sh: 45},
+      {sx: 53, sy: 147, sw: 37, sh: 45},
+      {sx: 101, sy: 147, sw: 37, sh: 45}
     ]
   };
   let mcPosition = {x: bw / 2, y: Math.round(bh * 0.62)};
@@ -652,7 +662,7 @@
     'thanks again for helping me earlier!',
     'enjoy the sea breeze with me!'
   ];
-  const WISE_WALK_PADDING = {x: 24, top: 54, bottom: 10};
+  const WISE_WALK_PADDING = {x: 18, top: 42, bottom: 6};
   let wiseBaseX = Math.round(bw * 0.42);
   let wisePosition = {x: wiseBaseX, y: Math.round(bh * 0.64)};
   let wiseDirection = MC_DIRECTIONS.down;
@@ -894,6 +904,29 @@
     'no quests right now.',
     'maybe soak in the sea breeze.'
   ];
+  const TITLE_SCREEN_IGNORED_KEY_CODES = new Set([
+    'AudioVolumeMute',
+    'AudioVolumeDown',
+    'AudioVolumeUp',
+    'VolumeMute',
+    'VolumeDown',
+    'VolumeUp',
+    'XF86AudioMute',
+    'XF86AudioLowerVolume',
+    'XF86AudioRaiseVolume'
+  ]);
+  const TITLE_SCREEN_IGNORED_KEYS = new Set([
+    'AudioVolumeMute',
+    'AudioVolumeDown',
+    'AudioVolumeUp',
+    'VolumeMute',
+    'VolumeDown',
+    'VolumeUp',
+    'XF86AudioMute',
+    'XF86AudioLowerVolume',
+    'XF86AudioRaiseVolume'
+  ]);
+  const INTRO_SPACE_HINT_TEXT = 'press space to continue';
   let finalFadeActive = false;
   let finalFadeProgress = 0;
   const FINAL_FADE_DURATION = 2.4;
@@ -2301,6 +2334,12 @@
         pickupMessageElapsed = 0;
       }
     }
+
+    if(finalFadeActive && finalFadeProgress < 1){
+      finalFadeProgress = Math.min(1, finalFadeProgress + dt / FINAL_FADE_DURATION);
+    }else if(!finalFadeActive && finalFadeProgress > 0){
+      finalFadeProgress = Math.max(0, finalFadeProgress - dt / FINAL_FADE_DURATION);
+    }
   }
 
   function drawPostSequenceOverlay(){
@@ -2468,11 +2507,43 @@
     bctx.globalAlpha = contentAlpha;
     bctx.drawImage(textCanvas, 0, 0, textCanvas.width, textCanvas.height, textX, textY, textCanvas.width, textCanvas.height);
     bctx.restore();
+
+    if(shouldShowIntroSpaceHint()){
+      drawIntroSpaceHint(contentAlpha);
+    }
   }
 
   function drawDialogueOverlay(){
     if(!isDialogueBoxVisible()) return;
     drawPingBox(pingBoxProgress);
+  }
+
+  function shouldShowIntroSpaceHint(){
+    if(dialogueContext !== 'intro') return false;
+    if(pingDialogues.length === 0) return false;
+    if(pingDialogueIndex !== 0) return false;
+    const expectedLine = INITIAL_PING_DIALOGUES[0];
+    const currentLine = pingDialogues[pingDialogueIndex] || '';
+    if(!expectedLine || currentLine !== expectedLine) return false;
+    if(!isDialogueBoxVisible()) return false;
+    return true;
+  }
+
+  function drawIntroSpaceHint(alpha){
+    if(alpha <= 0) return;
+    const textCanvas = makePixelTextCanvasLines([INTRO_SPACE_HINT_TEXT], 11, '#fbeedb');
+    const shadowCanvas = makePixelTextCanvasLines([INTRO_SPACE_HINT_TEXT], 11, '#000000');
+    const margin = Math.max(6, Math.round(bh * 0.02));
+    const x = Math.round((bw - textCanvas.width) / 2);
+    const y = Math.max(0, Math.round(bh - margin - textCanvas.height));
+    const clampedAlpha = Math.max(0, Math.min(1, alpha));
+    bctx.save();
+    bctx.imageSmoothingEnabled = false;
+    bctx.globalAlpha = clampedAlpha * 0.45;
+    bctx.drawImage(shadowCanvas, 0, 0, shadowCanvas.width, shadowCanvas.height, x + 1, y + 1, shadowCanvas.width, shadowCanvas.height);
+    bctx.globalAlpha = clampedAlpha;
+    bctx.drawImage(textCanvas, 0, 0, textCanvas.width, textCanvas.height, x, y, textCanvas.width, textCanvas.height);
+    bctx.restore();
   }
 
   function drawNamePromptOverlay(){
@@ -3625,9 +3696,11 @@
       ];
     }
     return [
-      `ahh, ${friendlyName}. the shoreline hums with gratitude.`,
-      'you gathered what the storm scattered and returned it with care.',
-      'close your eyes a moment—let the tide carry you to what comes next.'
+      "it's always so relaxing to walk along the beach like this...",
+      "ah, i don't think we've met before.",
+      `you're ${friendlyName}, right?`,
+      "it's nice to meet you! the island doesn't get many newcomers these days.",
+      "actually, there's someone i'd like you to meet. care to join me?"
     ];
   }
 
@@ -4812,16 +4885,6 @@
         drawPostSequenceOverlay();
         drawNamePromptOverlay();
         drawQuestPromptOverlay();
-        if(finalFadeActive || finalFadeProgress > 0){
-          const fadeAlpha = Math.max(0, Math.min(1, finalFadeProgress));
-          if(fadeAlpha > 0){
-            bctx.save();
-            bctx.globalAlpha = fadeAlpha;
-            bctx.fillStyle = '#000';
-            bctx.fillRect(0,0,bw,bh);
-            bctx.restore();
-          }
-        }
       }else if(currentScene === SCENE.adventure){
         drawAdventureScene();
         drawDialogueOverlay();
@@ -4842,6 +4905,17 @@
       drawInventoryButton();
       drawJournalButton();
       drawQuestsButton();
+
+      if(finalFadeActive || finalFadeProgress > 0){
+        const fadeAlpha = Math.max(0, Math.min(1, finalFadeProgress));
+        if(fadeAlpha > 0){
+          bctx.save();
+          bctx.globalAlpha = fadeAlpha;
+          bctx.fillStyle = '#000';
+          bctx.fillRect(0,0,bw,bh);
+          bctx.restore();
+        }
+      }
     }catch(err){
       // show error message in buffer so it's visible in preview
       bctx.clearRect(0,0,bw,bh);
@@ -5029,6 +5103,16 @@
     function onKeyDown(e){
       if(currentScene === SCENE.adventure && isAdventureDialogueActive()){
         if(handleAdventureKeyDown(e)) return;
+      }
+      if(currentScene === SCENE.title){
+        if(TITLE_SCREEN_IGNORED_KEY_CODES.has(e.code) || TITLE_SCREEN_IGNORED_KEYS.has(e.key)){
+          return;
+        }
+        if(namePromptState === 'visible'){
+          if(handleNamePromptKey(e)) return;
+          e.preventDefault();
+          return;
+        }
       }
       if(e.code === 'KeyI'){
         if(currentScene === SCENE.adventure && isAdventureDialogueActive()){
